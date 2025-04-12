@@ -34,13 +34,13 @@ jobs:
         dotnet-version: '9.0.x'
         
     - name: Clean output directory
-      run: dotnet clean -c Release
+      run: dotnet clean $env:Solution_Name -c Release
             
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore $env:Solution_Name
       
     - name: Build project
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet build $env:Solution_Name --no-restore --configuration Release
       
     - name: Publish Windows (x64)
       run: dotnet publish --configuration Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/win-x64
