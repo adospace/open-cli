@@ -18,7 +18,7 @@ on:
 jobs:
   build:
     name: Build and Release
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     
     env:
       Solution_Name: ./src/OpenCli.sln
@@ -34,22 +34,22 @@ jobs:
         dotnet-version: '9.0.x'
         
     - name: Clean output directory
-      run: dotnet clean $env:Solution_Name -c Release
+      run: dotnet clean -c Release
             
     - name: Restore dependencies
-      run: dotnet restore $env:Solution_Name
+      run: dotnet restore
       
     - name: Build project
-      run: dotnet build $env:Solution_Name --no-restore --configuration Release
+      run: dotnet build --no-restore --configuration Release
       
     - name: Publish Windows (x64)
-      run: dotnet publish $env:ProjectName --configuration Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/win-x64
+      run: dotnet publish --configuration Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/win-x64
       
     - name: Publish macOS (x64)
-      run: dotnet publish $env:ProjectName --configuration Release -r osx-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/osx-x64
+      run: dotnet publish --configuration Release -r osx-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/osx-x64
       
     - name: Publish Linux (x64)
-      run: dotnet publish $env:ProjectName --configuration Release -r linux-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/linux-x64
+      run: dotnet publish --configuration Release -r linux-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/linux-x64
       
     - name: Zip Windows artifacts
       run: cd ./publish/win-x64 && zip -r ../../OpenCli-${{ steps.get_version.outputs.VERSION }}-win-x64.zip .
