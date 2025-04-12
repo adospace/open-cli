@@ -41,17 +41,6 @@ jobs:
     - name: Build project
       run: dotnet build $env:Solution_Name --no-restore --configuration Release
       
-    - name: Get version from tag or input
-      id: get_version
-      run: |
-        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-          echo "PRERELEASE=${{ github.event.inputs.prerelease }}" >> $GITHUB_OUTPUT
-        else
-          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          echo "PRERELEASE=false" >> $GITHUB_OUTPUT
-        fi
-      
     - name: Publish Windows (x64)
       run: dotnet publish $env:Solution_Name --no-build --configuration Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/win-x64
       
