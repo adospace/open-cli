@@ -53,13 +53,13 @@ jobs:
         fi
       
     - name: Publish Windows (x64)
-      run: dotnet publish --no-build --configuration Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/win-x64
+      run: dotnet publish $env:Solution_Name --no-build --configuration Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/win-x64
       
     - name: Publish macOS (x64)
-      run: dotnet publish --no-build --configuration Release -r osx-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/osx-x64
+      run: dotnet publish $env:Solution_Name --no-build --configuration Release -r osx-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/osx-x64
       
     - name: Publish Linux (x64)
-      run: dotnet publish --no-build --configuration Release -r linux-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/linux-x64
+      run: dotnet publish $env:Solution_Name --no-build --configuration Release -r linux-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/linux-x64
       
     - name: Zip Windows artifacts
       run: cd ./publish/win-x64 && zip -r ../../YourAppName-${{ steps.get_version.outputs.VERSION }}-win-x64.zip .
