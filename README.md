@@ -1,4 +1,4 @@
-# open-cli
+# OpenCli
 OpenCli is an AI-integrated terminal application that effectively does what you ask in natural language
 
 
