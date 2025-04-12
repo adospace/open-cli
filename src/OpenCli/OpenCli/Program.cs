@@ -7,6 +7,7 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.ComponentModel;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -79,8 +80,8 @@ var history = new ChatHistory();
 var reducer = new ChatHistoryTruncationReducer(targetCount: 10); // Keep system message and last user message
 
 
-history.AddSystemMessage("""
-    You are an helpful assistant of the user working with a shell in Windows, Linux or Mac. 
+history.AddSystemMessage($"""
+    You are an helpful assistant of the user working with a shell in {RuntimeInformation.OSDescription}. 
     Help user in issue commands in powershell or cmd or bash etc, for example you can execute programs, check if a program is installed or execute powershell commands.
     You'll be provided with functions to execute commands on the system. You can get or set the current directory with the specific function.
     When you execute a command, if you believe the command will change the system, you must ask for user approval before executing it.
