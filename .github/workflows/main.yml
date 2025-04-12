@@ -20,6 +20,9 @@ jobs:
     name: Build and Release
     runs-on: ubuntu-latest
     
+    env:
+      Solution_Name: ./src/OpenCli.sln
+      
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -28,15 +31,15 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
-
-    - name: Change directory to project
-      run: cd src
         
+    - name: Clean output directory
+      run: dotnet clean $env:Solution_Name -c Release
+            
     - name: Restore dependencies
-      run: dotnet restore 
+      run: dotnet restore $env:Solution_Name
       
     - name: Build project
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet build $env:Solution_Name --no-restore --configuration Release
       
     - name: Test
       run: dotnet test --no-build --configuration Release
