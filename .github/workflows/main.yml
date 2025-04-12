@@ -4,6 +4,16 @@ on:
   push:
     tags:
       - 'v*'  # Trigger on any tag starting with 'v' (e.g., v1.0.0)
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (without v prefix)'
+        required: true
+        default: '1.0.0'
+      prerelease:
+        description: 'Is this a prerelease?'
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -28,9 +38,16 @@ jobs:
     - name: Test
       run: dotnet test --no-build --configuration Release
       
-    - name: Get version from tag
+    - name: Get version from tag or input
       id: get_version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          echo "PRERELEASE=${{ github.event.inputs.prerelease }}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          echo "PRERELEASE=false" >> $GITHUB_OUTPUT
+        fi
       
     - name: Publish Windows (x64)
       run: dotnet publish --no-build --configuration Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/win-x64
@@ -55,8 +72,9 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         name: Release ${{ steps.get_version.outputs.VERSION }}
+        tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', github.event.inputs.version) || github.ref }}
         draft: false
-        prerelease: false
+        prerelease: ${{ steps.get_version.outputs.PRERELEASE }}
         files: |
           YourAppName-${{ steps.get_version.outputs.VERSION }}-win-x64.zip
           YourAppName-${{ steps.get_version.outputs.VERSION }}-osx-x64.tar.gz
