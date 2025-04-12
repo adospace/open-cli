@@ -1,120 +1,65 @@
-name: Build and Publish
+name: .NET 9 Release Build
 
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*'  # Trigger on any tag starting with 'v' (e.g., v1.0.0)
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        include:
-          - os: ubuntu-latest
-            dotnet-version: '9.0.x'
-          - os: windows-latest
-            dotnet-version: '9.0.x'
-          - os: macos-latest
-            dotnet-version: '9.0.x'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: ${{ matrix.dotnet-version }}
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Publish
-        run: dotnet publish --configuration Release --no-build --output ./publish
-
-      - name: Archive build
-        if: matrix.os == 'ubuntu-latest'
-        run: tar -czvf app-linux.tar.gz -C ./publish .
-
-      - name: Archive build
-        if: matrix.os == 'windows-latest'
-        run: Compress-Archive -Path ./publish/* -DestinationPath app-windows.zip
-
-      - name: Archive build
-        if: matrix.os == 'macos-latest'
-        run: tar -czvf app-macos.tar.gz -C ./publish .
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.os }}-build
-          path: |
-            app-linux.tar.gz
-            app-windows.zip
-            app-macos.tar.gz
-
-  release:
-    needs: build
+    name: Build and Release
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: ubuntu-latest-build
-          path: ./artifacts/linux
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: windows-latest-build
-          path: ./artifacts/windows
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: macos-latest-build
-          path: ./artifacts/macos
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Asset (Linux)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifacts/linux/app-linux.tar.gz
-          asset_name: app-linux.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Upload Release Asset (Windows)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifacts/windows/app-windows.zip
-          asset_name: app-windows.zip
-          asset_content_type: application/zip
-
-      - name: Upload Release Asset (macOS)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifacts/macos/app-macos.tar.gz
-          asset_name: app-macos.tar.gz
-          asset_content_type: application/gzip
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build project
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Test
+      run: dotnet test --no-build --configuration Release
+      
+    - name: Get version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      
+    - name: Publish Windows (x64)
+      run: dotnet publish --no-build --configuration Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/win-x64
+      
+    - name: Publish macOS (x64)
+      run: dotnet publish --no-build --configuration Release -r osx-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/osx-x64
+      
+    - name: Publish Linux (x64)
+      run: dotnet publish --no-build --configuration Release -r linux-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/linux-x64
+      
+    - name: Zip Windows artifacts
+      run: cd ./publish/win-x64 && zip -r ../../YourAppName-${{ steps.get_version.outputs.VERSION }}-win-x64.zip .
+      
+    - name: Tar macOS artifacts
+      run: cd ./publish/osx-x64 && tar -czvf ../../YourAppName-${{ steps.get_version.outputs.VERSION }}-osx-x64.tar.gz .
+      
+    - name: Tar Linux artifacts
+      run: cd ./publish/linux-x64 && tar -czvf ../../YourAppName-${{ steps.get_version.outputs.VERSION }}-linux-x64.tar.gz .
+      
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ steps.get_version.outputs.VERSION }}
+        draft: false
+        prerelease: false
+        files: |
+          YourAppName-${{ steps.get_version.outputs.VERSION }}-win-x64.zip
+          YourAppName-${{ steps.get_version.outputs.VERSION }}-osx-x64.tar.gz
+          YourAppName-${{ steps.get_version.outputs.VERSION }}-linux-x64.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
