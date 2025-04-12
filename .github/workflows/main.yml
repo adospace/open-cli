@@ -15,6 +15,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write  # Ensure the token has write permissions for contents
+
 jobs:
   build:
     name: Build and Release
@@ -62,7 +65,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         name: Release ${{ github.event.inputs.version }}
-        tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', github.event.inputs.version) || github.ref }}
+        tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', github.event.inputs.version) || github.ref_name }}
         draft: false
         prerelease: ${{ github.event.inputs.prerelease }}
         files: |
