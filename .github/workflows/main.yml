@@ -28,9 +28,12 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
+
+    - name: Change directory to project
+      run: cd src
         
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore 
       
     - name: Build project
       run: dotnet build --no-restore --configuration Release
