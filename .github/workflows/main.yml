@@ -22,6 +22,7 @@ jobs:
     
     env:
       Solution_Name: ./src/OpenCli.sln
+      ProjectName: ./src/OpenCli/OpenCli.csproj
       
     steps:
     - name: Checkout code
@@ -42,22 +43,22 @@ jobs:
       run: dotnet build $env:Solution_Name --no-restore --configuration Release
       
     - name: Publish Windows (x64)
-      run: dotnet publish $env:Solution_Name --no-build --configuration Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/win-x64
+      run: dotnet publish $env:ProjectName --configuration Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/win-x64
       
     - name: Publish macOS (x64)
-      run: dotnet publish $env:Solution_Name --no-build --configuration Release -r osx-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/osx-x64
+      run: dotnet publish $env:ProjectName --configuration Release -r osx-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/osx-x64
       
     - name: Publish Linux (x64)
-      run: dotnet publish $env:Solution_Name --no-build --configuration Release -r linux-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/linux-x64
+      run: dotnet publish $env:ProjectName --configuration Release -r linux-x64 -p:PublishSingleFile=true --self-contained true -o ./publish/linux-x64
       
     - name: Zip Windows artifacts
-      run: cd ./publish/win-x64 && zip -r ../../YourAppName-${{ steps.get_version.outputs.VERSION }}-win-x64.zip .
+      run: cd ./publish/win-x64 && zip -r ../../OpenCli-${{ steps.get_version.outputs.VERSION }}-win-x64.zip .
       
     - name: Tar macOS artifacts
-      run: cd ./publish/osx-x64 && tar -czvf ../../YourAppName-${{ steps.get_version.outputs.VERSION }}-osx-x64.tar.gz .
+      run: cd ./publish/osx-x64 && tar -czvf ../../OpenCli-${{ steps.get_version.outputs.VERSION }}-osx-x64.tar.gz .
       
     - name: Tar Linux artifacts
-      run: cd ./publish/linux-x64 && tar -czvf ../../YourAppName-${{ steps.get_version.outputs.VERSION }}-linux-x64.tar.gz .
+      run: cd ./publish/linux-x64 && tar -czvf ../../OpenCli-${{ steps.get_version.outputs.VERSION }}-linux-x64.tar.gz .
       
     - name: Create Release
       id: create_release
