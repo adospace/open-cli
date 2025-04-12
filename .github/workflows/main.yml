@@ -35,7 +35,7 @@ jobs:
             
     - name: Restore dependencies
       run: dotnet restore $env:Solution_Name
-      working-directory: src
+      working-directory: ${GITHUB_WORKSPACE}/src
       
     - name: Build project
       run: dotnet build $env:Solution_Name --no-restore --configuration Release
