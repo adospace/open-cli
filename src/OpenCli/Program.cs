@@ -147,18 +147,29 @@ public class CliPlugin
     {
         Console.WriteLine($"OS > Executing {targetFilePath} {string.Join(" ", arguments)}...");
 
-        var result = await Cli.Wrap(targetFilePath)
-            .WithArguments(arguments)
-            .WithValidation(CommandResultValidation.None)
-            .WithWorkingDirectory(Environment.CurrentDirectory)
-            .ExecuteBufferedAsync();
-
-        if (result.IsSuccess)
+        try
         {
-            return result.StandardOutput;
-        }
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)); // 30-second timeout
 
-        return result.StandardError;
+            var result = await Cli.Wrap(targetFilePath)
+                .WithArguments(arguments)
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteBufferedAsync(cts.Token);
+
+            if (result.IsSuccess)
+            {
+                Console.WriteLine($"{result.StandardOutput}");
+                return result.StandardOutput;
+            }
+
+            Console.WriteLine($"{result.StandardError}");
+            return result.StandardError;
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine("Command timed out after 30 seconds.");
+            return "Command timed out after 30 seconds.";
+        }
     }
 
     [KernelFunction("cur_dir")]
